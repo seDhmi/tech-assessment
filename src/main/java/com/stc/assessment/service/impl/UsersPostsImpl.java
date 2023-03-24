@@ -6,6 +6,8 @@ import com.stc.assessment.service.UsersPostsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class UsersPostsImpl implements UsersPostsService {
 
@@ -15,5 +17,10 @@ public class UsersPostsImpl implements UsersPostsService {
     @Override
     public UsersPosts createUsersPosts(UsersPosts usersPosts) {
         return userPostsRepository.save(usersPosts);
+    }
+
+    @Override
+    public List<UsersPosts> findAll() {
+        return userPostsRepository.findAll();
     }
 }

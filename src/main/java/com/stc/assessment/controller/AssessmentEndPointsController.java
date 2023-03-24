@@ -65,6 +65,8 @@ public class AssessmentEndPointsController {
 
         UsersPosts[] usersPosts = getAllPostsSortedById().getBody();
         Map<Long, UsersPosts> usersPostsMap = new HashMap<>();
+
+        assert usersPosts != null;
         for (UsersPosts usersPost : usersPosts) {
             Long userId = usersPost.getUser_id();
             usersPostsMap.put(userId, usersPost);
@@ -84,6 +86,16 @@ public class AssessmentEndPointsController {
     public void getAllComments(){
         // Get all the comments for the saved posts in the previous step and store the response to your DB.
         // Return 200 HTTP code in case of success.
+
+        String url = "https://gorest.co.in/public/v2/comments";
+
+
+        List<UsersPosts> usersPostsList = usersPostsService.findAll();
+        for (UsersPosts usersPosts : usersPostsList) {
+            Long id = usersPosts.getId();
+
+        }
+
     }
 
     @GetMapping("/user/{userId}")
