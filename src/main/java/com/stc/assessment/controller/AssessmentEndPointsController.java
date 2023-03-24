@@ -1,7 +1,9 @@
 package com.stc.assessment.controller;
 
+import com.stc.assessment.model.PostsComments;
 import com.stc.assessment.model.User;
 import com.stc.assessment.model.UsersPosts;
+import com.stc.assessment.service.PostsCommentsService;
 import com.stc.assessment.service.UserService;
 import com.stc.assessment.service.UsersPostsService;
 import org.json.JSONObject;
@@ -25,6 +27,8 @@ public class AssessmentEndPointsController {
     private UserService userService;
     @Autowired
     private UsersPostsService usersPostsService;
+    @Autowired
+    private PostsCommentsService postsCommentsService;
 
     @GetMapping("/")
     public String index(){ return "Greetings from Spring Boot!"; }
@@ -87,13 +91,25 @@ public class AssessmentEndPointsController {
         // Get all the comments for the saved posts in the previous step and store the response to your DB.
         // Return 200 HTTP code in case of success.
 
-        String url = "https://gorest.co.in/public/v2/comments";
+        String url = "https://gorest.co.in/public/v2/comments"; // Not good practice, we should put it in config.file
+        RestTemplate restTemplate = new RestTemplate();
+
+        ResponseEntity<PostsComments[]> responseEntity = restTemplate.getForEntity(url, PostsComments[].class);
+        PostsComments[] postsComments = responseEntity.getBody();
+
+        Map<Long, PostsComments> map = new HashMap<>();
+        assert postsComments != null;
+        for (PostsComments postsComment : postsComments) {
+            long postId = postsComment.getPost_id();
+            map.put(postId, postsComment);
+        }
 
 
         List<UsersPosts> usersPostsList = usersPostsService.findAll();
         for (UsersPosts usersPosts : usersPostsList) {
             Long id = usersPosts.getId();
-
+            if (map.containsKey(id))
+                postsCommentsService.createPostsComment(map.get(id));
         }
 
     }
