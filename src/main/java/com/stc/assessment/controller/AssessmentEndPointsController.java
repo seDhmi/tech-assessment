@@ -6,18 +6,13 @@ import com.stc.assessment.model.UsersPosts;
 import com.stc.assessment.service.PostsCommentsService;
 import com.stc.assessment.service.UserService;
 import com.stc.assessment.service.UsersPostsService;
-import org.json.JSONObject;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 
 @RestController
@@ -115,13 +110,71 @@ public class AssessmentEndPointsController {
     }
 
     @GetMapping("/user/{userId}")
-    public void getUserInfo(){
+    public List<Object> getUserInfo(@PathVariable("userId") long userId) {
         // Takes user id and returns user info, user posts, and post comments.
+        // TODO: using async is better than sync.
+
+        String infoUrl = "https://gorest.co.in/public/v2/users";
+        String postsUrl = "https://gorest.co.in/public/v2/posts";
+        String commentsUrl = "https://gorest.co.in/public/v2/comments";
+
+        RestTemplate restTemplate = new RestTemplate();
+
+        ResponseEntity<User[]> userResponseEntity = restTemplate.getForEntity(infoUrl, User[].class);
+        ResponseEntity<UsersPosts[]> userPostsResponseEntity = restTemplate.getForEntity(postsUrl, UsersPosts[].class);
+        ResponseEntity<PostsComments[]> postsCommentsResponseEntity = restTemplate.getForEntity(commentsUrl, PostsComments[].class);
+
+        User[] users = userResponseEntity.getBody();
+        UsersPosts[] usersPosts = userPostsResponseEntity.getBody();
+        PostsComments[] postsComments = postsCommentsResponseEntity.getBody();
+
+        Map<Long, User> userMap = new HashMap<>();
+        Map<Long, UsersPosts> usersPostsMap = new HashMap<>();
+        Map<Long, PostsComments> postsCommentsMap = new HashMap<>();
+
+        assert users != null;
+        for (User user : users) {
+            Long id = user.getId();
+            userMap.put(id, user);
+        }
+
+        assert usersPosts != null;
+        for (UsersPosts usersPost : usersPosts) {
+            Long id = usersPost.getUser_id();
+            usersPostsMap.put(id, usersPost);
+        }
+
+        assert postsComments != null;
+        for (PostsComments postsComment : postsComments) {
+            long postId = postsComment.getPost_id();
+            postsCommentsMap.put(postId, postsComment);
+        }
+
+        List<Object> result = new ArrayList<>();
+
+        boolean isUser = userMap.containsKey(userId);
+        boolean hasPost = usersPostsMap.containsKey(userId);
+        if (isUser && hasPost){
+            Long id = usersPostsMap.get(userId).getId();
+
+            User user = userMap.get(userId);
+            UsersPosts post = usersPostsMap.get(userId);
+            boolean hasComment = postsCommentsMap.containsKey(id);
+            PostsComments comments = hasComment ? postsCommentsMap.get(id) : new PostsComments();
+
+            result.add(user);
+            result.add(post);
+            result.add(comments);
+        }
+
+        return result;
     }
 
     @PostMapping("/updateUserInfo")
-    public void updateUserInfo(){
+    public void updateUserInfo(@RequestBody User updatedUser){
         // To update the name of the user by taking user-id and updated-name in the body of the request.
         // 200 HTTP code in case of success.
+
+        userService.updateUserName(updatedUser);
     }
 }

@@ -8,6 +8,8 @@ public interface UserService {
 
     public abstract User createUsers(User user);
 
+    public abstract User updateUserName(User updatedUser);
+
     public abstract List<User> findAll();
 
 }
